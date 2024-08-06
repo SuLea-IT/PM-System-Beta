@@ -7,7 +7,6 @@
 
 ```bash
 PM-System-Beta/
-├── .gitignore
 ├── PM-System-Beta.iml
 ├── README.md
 ├── README.zh-CN.md
