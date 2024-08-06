@@ -37,3 +37,28 @@ PM-System-Beta/
     └── layout.pug
 
 ```
+
+
+1. Clone the project repository
+
+   ```cmd
+    git clone https://github.com/SuLea-IT/PM-System-Beta.git
+   ```
+
+2. Navigate to the project directory
+
+   ```cmd
+   cd PM-System-Beta
+   ```
+
+3. Install dependencies
+
+   ```
+   npm install
+   ```
+
+4. Run the project
+
+   ```cmd
+   node bin/www
+   ```
