@@ -8,14 +8,6 @@
 ```bash
 PM-System-Beta/
 ├── .gitignore
-├── .idea/
-│   ├── .gitignore
-│   ├── jsLibraryMappings.xml
-│   ├── misc.xml
-│   ├── modules.xml
-│   ├── runConfigurations/
-│   └── sqldialects.xml
-│   └── vcs.xml
 ├── PM-System-Beta.iml
 ├── README.md
 ├── README.zh-CN.md
