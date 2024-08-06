@@ -18,3 +18,13 @@ CREATE TABLE UploadRecords (
                                data_size INT NOT NULL,
                                upload_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE TABLE files (
+                       id INT AUTO_INCREMENT PRIMARY KEY,
+                       project_id VARCHAR(255) NOT NULL,
+                       user_id VARCHAR(255) NOT NULL,
+                       filename VARCHAR(255) NOT NULL,
+                       filepath VARCHAR(255) NOT NULL,
+                       file_size INT NOT NULL,
+                       first_chunk_md5 VARCHAR(255) NOT NULL
+);
