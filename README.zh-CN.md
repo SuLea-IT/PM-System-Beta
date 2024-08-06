@@ -61,3 +61,7 @@ PM-System-Beta/
    ```cmd
    node bin/www
    ```
+
+## 功能流程图：
+- 大文件分片上传(增量计算)：
+![img_2.png](public/images/img_2.png)

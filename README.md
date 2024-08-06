@@ -62,3 +62,6 @@ PM-System-Beta/
    ```cmd
    node bin/www
    ```
+## Functional Flowchart:
+- Large File Chunk Upload (Incremental Calculation):
+![img_1.png](public/images/img_1.png)
