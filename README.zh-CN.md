@@ -37,3 +37,27 @@ PM-System-Beta/
     └── layout.pug
 
 ```
+
+1. 克隆项目代码
+
+   ```cmd
+    git clone https://github.com/SuLea-IT/PM-System-Beta.git
+   ```
+
+2. 进入项目目录
+
+   ```cmd
+   cd PM-System-Beta
+   ```
+
+3. 安装依赖
+
+   ```
+   npm install
+   ```
+
+4. 运行项目
+
+   ```cmd
+   node bin/www
+   ```
