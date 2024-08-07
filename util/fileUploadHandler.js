@@ -10,28 +10,51 @@ const {
     finalizeMD5Incremental
 } = require('./fileHelpers');
 
-// For tracking upload progress
 const uploadProgress = {};
-const fileExistFlag = {}; // To flag if the file already exists
+const fileExistFlag = {};
 
-// Calculate MD5 for a file chunk
 const calculateMD5 = (data) => {
     return crypto.createHash('md5').update(data).digest('hex');
 };
 
-// Handle file upload and merging
+const formatDate = (date) => {
+    const year = date.getFullYear();
+    const month = date.getMonth() + 1;
+    const day = date.getDate();
+
+    return `${year}-${month}-${day}`;
+};
+
+const sanitizeIP = (ip) => {
+    if (ip.includes(':')) {
+        // IPv6 address
+        try {
+            const ip6To4 = require('ip6-to4');
+            const ipv4 = ip6To4(ip);
+            return ipv4 || ip.replace(/:/g, '-');
+        } catch (error) {
+            // If ip6-to4 conversion fails, replace colons with hyphens
+            return ip.replace(/:/g, '-');
+        }
+    }
+    return ip;
+};
+
 async function handleFileUpload(req) {
     const {index, totalChunks, fileName} = req.body;
     const total = parseInt(totalChunks, 10);
     if (isNaN(total) || total < 1) {
-        throw new Error('Invalid total chunks number');
+        throw new Error('无效的分片总数');
     }
 
-    const projectId = req.body.projectId;
-    const userId = req.body.userId;
-    const uploadId = `${projectId}_${userId}_${fileName}`;
+    const timestamp = formatDate(new Date());
 
-    const projectDir = `uploads/${projectId}`;
+    let ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+    ip = sanitizeIP(ip);
+
+    const uploadId = timestamp + '_' + ip + '_' + fileName;
+
+    const projectDir = `uploads/${timestamp}`;
     await fsExtra.ensureDir(projectDir);
 
     const chunkDir = path.join(projectDir, uploadId);
@@ -46,11 +69,11 @@ async function handleFileUpload(req) {
 
     if (fileExistFlag[uploadId]) {
         await fsExtra.remove(chunkDir);
-        return {code: 400, msg: 'File already exists', data: null};
+        return {code: 400, msg: '文件已经存在', data: null};
     }
 
     if (!req.file) {
-        throw new Error('No file provided');
+        throw new Error('文件未提供');
     }
 
     try {
@@ -61,27 +84,30 @@ async function handleFileUpload(req) {
         const chunkMD5 = calculateMD5(chunkData);
 
         if (parseInt(index, 10) === 0) {
+            console.log('第一个分片的MD5:', chunkMD5);
             const [existingFiles] = await db.query('SELECT id FROM files WHERE first_chunk_md5 = ?', [chunkMD5]);
-            if (existingFiles.length > 0) {
+            if (existingFiles) {
+                console.log('文件已经存在，阻止上传');
                 fileExistFlag[uploadId] = true;
                 await fsExtra.remove(chunkDir);
                 await fsExtra.remove(req.file.path);
-                return {code: 400, msg: 'File already exists', data: null};
+                return {code: 400, msg: '文件已经存在', data: null};
             }
             uploadProgress[uploadId].firstChunkMD5 = chunkMD5;
         }
 
         if (await fsExtra.pathExists(chunkPath)) {
-            return {code: 400, msg: 'Chunk already exists', data: null};
+            return {code: 400, msg: '分片已经存在', data: null};
         }
 
         await fsExtra.move(req.file.path, chunkPath);
         const indexInt = parseInt(index, 10);
         if (isNaN(indexInt) || indexInt < 0 || indexInt >= uploadProgress[uploadId].chunks.length) {
-            throw new Error('Invalid index value');
+            throw new Error('无效的索引值');
         }
 
         updateMD5Incremental(uploadProgress[uploadId].md5Incremental, chunkData);
+
         uploadProgress[uploadId].chunks[indexInt] = true;
 
         const allUploaded = uploadProgress[uploadId].chunks.every(status => status === true);
@@ -96,14 +122,14 @@ async function handleFileUpload(req) {
             if (await fsExtra.pathExists(finalOutputPath)) {
                 await fsExtra.remove(chunkDir);
                 await fsExtra.remove(finalOutputPath);
-                return {code: 400, msg: 'File already exists', data: null};
+                return {code: 400, msg: '目标文件已经存在', data: null};
             }
 
             await fsExtra.move(tempOutputPath, finalOutputPath);
 
-            await db.query('INSERT INTO files (project_id, user_id, filename, filepath, file_size, first_chunk_md5) VALUES (?, ?, ?, ?, ?, ?)', [
-                projectId,
-                userId,
+            await db.query('INSERT INTO files (timestamp, ip, filename, filepath, file_size, first_chunk_md5) VALUES (?, ?, ?, ?, ?, ?)', [
+                timestamp,
+                ip,
                 fileName,
                 finalOutputPath,
                 uploadProgress[uploadId].fileSize,
@@ -115,18 +141,20 @@ async function handleFileUpload(req) {
             delete uploadProgress[uploadId];
             delete fileExistFlag[uploadId];
 
-            return {code: 200, msg: 'File successfully merged and chunk directory deleted', data: {md5: finalMD5}};
+            return {code: 200, msg: '文件合并成功并且分片文件夹已删除', data: {md5: finalMD5}};
         } else {
-            return {code: 200, msg: 'Chunk uploaded successfully, waiting for other chunks', data: null};
+            return {code: 200, msg: '分片上传成功，等待其他分片', data: null};
         }
     } catch (error) {
         if (error.message.includes('dest already exists')) {
+            console.error(`文件上传错误: ${error.message}`, error);
             await fsExtra.remove(chunkDir);
             await fsExtra.remove(req.file.path);
-            return {code: 400, msg: 'File already exists', data: null};
+            return {code: 400, msg: '文件已经存在', data: null};
         } else {
+            console.error(`移动文件分片错误: ${error.message}`, error);
             await fsExtra.remove(chunkDir);
-            throw new Error(`Server error: unable to move file chunk - ${error.message}`);
+            throw new Error(`服务器错误：无法移动文件分片 - ${error.message}`);
         }
     }
 }

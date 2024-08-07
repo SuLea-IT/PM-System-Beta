@@ -2,22 +2,22 @@ const crypto = require('crypto');
 const fsExtra = require('fs-extra');
 const path = require('path');
 
-// Initialize an incremental MD5 object
+// 初始化一个增量计算 MD5 的对象
 function createMD5Incremental() {
     return crypto.createHash('md5');
 }
 
-// Update incremental MD5 object
+// 更新增量 MD5 对象
 function updateMD5Incremental(md5Incremental, chunk) {
     md5Incremental.update(chunk, 'utf8');
 }
 
-// Get the final MD5 value
+// 获取增量 MD5 的最终值
 function finalizeMD5Incremental(md5Incremental) {
     return md5Incremental.digest('hex');
 }
 
-// Check if a chunk exists
+// 检查文件分片是否存在
 async function checkChunkExists(chunkDir, chunkFilename) {
     const fullPath = path.join(chunkDir, chunkFilename);
     try {
@@ -28,7 +28,7 @@ async function checkChunkExists(chunkDir, chunkFilename) {
     }
 }
 
-// Merge file chunks and calculate the final MD5
+// 合并文件分片并计算整体文件的 MD5
 async function mergeChunks(files, dest) {
     return new Promise((resolve, reject) => {
         const output = fsExtra.createWriteStream(dest);
