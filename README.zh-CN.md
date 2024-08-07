@@ -85,7 +85,9 @@ PM-System-Beta/
 
 拉黑时间 $$\( T_{ip, \text{upgrade}} \) $$递增公式为：
 $$
+
 \[T_{ip, \text{upgrade}} = T_{ip} + 600 \times (N_{c, \text{blacklist}} - \text{threshold})\]
+
 $$
 其中，`threshold` 是定义的基础拉黑次数阈值。
 
