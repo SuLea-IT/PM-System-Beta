@@ -84,6 +84,7 @@ PM-System-Beta/
 设同一国家的IP地址被拉黑的次数为 \( N_{c, \text{blacklist}} \)，若超过一定次数，则增加拉黑时间。
 
 拉黑时间 $$\( T_{ip, \text{upgrade}} \) $$递增公式为：
+
 $$
 
 \[T_{ip, \text{upgrade}} = T_{ip} + 600 \times (N_{c, \text{blacklist}} - \text{threshold})\]
