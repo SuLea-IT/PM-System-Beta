@@ -27,18 +27,28 @@ const formatDate = (date) => {
 
 const sanitizeIP = (ip) => {
     if (ip.includes(':')) {
-        // IPv6 address
+        // 检查是否是IPv6的本地回环地址
+        if (ip === '::1') {
+            return '127.0.0.1';
+        }
+        // 处理其他IPv6地址
         try {
             const ip6To4 = require('ip6-to4');
             const ipv4 = ip6To4(ip);
-            return ipv4 || ip.replace(/:/g, '-');
+            if (ipv4) {
+                return ipv4;
+            } else {
+                // 如果转换失败，保留原始IPv6地址
+                return ip;
+            }
         } catch (error) {
-            // If ip6-to4 conversion fails, replace colons with hyphens
-            return ip.replace(/:/g, '-');
+            // 如果ip6-to4转换失败，保留原始IPv6地址
+            return ip;
         }
     }
-    return ip;
+    return ip; // 返回原始的IPv4地址
 };
+
 
 async function handleFileUpload(req) {
     const {index, totalChunks, fileName} = req.body;
