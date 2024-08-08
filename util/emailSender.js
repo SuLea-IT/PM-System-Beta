@@ -7,7 +7,7 @@ const path = require('path');
 const sendEmail = async (to, subject, templateData) => {
     // 配置邮件发送器
     let transporter = nodemailer.createTransport({
-        host: 'smtp.163.com',
+        host: 'smtp.vip.163.com',
         port: 465,
         secure: true, // 使用SSL
         auth: {
