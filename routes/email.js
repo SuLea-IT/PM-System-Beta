@@ -5,18 +5,14 @@ const router = express.Router();
 const sendEmail = require('../util/emailSender');
 
 router.post('/send-email', async (req, res) => {
-    const { to, subject, title, message } = req.body;
-
-    const templateData = {
-        title: title,
-        message: message
-    };
+    const { to} = req.body;
 
     try {
-        await sendEmail(to, subject, templateData);
+        await sendEmail(to);
         res.status(200).send('邮件发送成功！');
     } catch (error) {
-        res.status(500).send('发送邮件时出错。');
+        console.error('发送邮件时出错: ', error);
+        res.status(500).send(`发送邮件时出错: ${error.message}`);
     }
 });
 
