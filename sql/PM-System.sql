@@ -11,14 +11,6 @@ CREATE TABLE DataDetails (
                              type ENUM('0', '1', '2', '3', '4', '5') NOT NULL
 );
 
-CREATE TABLE UploadRecords (
-                               id INT AUTO_INCREMENT PRIMARY KEY,
-                               visitor_ip VARCHAR(45) NOT NULL,
-                               data_name VARCHAR(255) NOT NULL,
-                               data_size INT NOT NULL,
-                               upload_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
 CREATE TABLE files (
                        id INT AUTO_INCREMENT PRIMARY KEY,
                        project_id VARCHAR(255) NOT NULL,
