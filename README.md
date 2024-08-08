@@ -57,3 +57,7 @@ PM-System-Beta/
 - Large File Chunk Upload (Incremental Calculation):
 
 ![img_1.png](public/images/img_1.png)
+
+- Email sending function：
+
+![img.png](public/images/img_4.png)

@@ -56,3 +56,7 @@ PM-System-Beta/
 - 大文件分片上传(增量计算)：
 
 ![img_2.png](public/images/img_2.png)
+
+- 邮箱发送功能：
+
+![img.png](public/images/img.png)
