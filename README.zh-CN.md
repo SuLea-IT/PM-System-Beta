@@ -3,7 +3,7 @@
 
 > 这个项目是一个基于 `Node` / `Python` 的后端应用，主要用于部分数据分析。
 
-## 目录结构
+### 目录结构
 
 ```bash
 PM-System-Beta/
@@ -27,7 +27,10 @@ PM-System-Beta/
     ├── index.pug
     └── layout.pug
 
+
+
 ```
+### 部署
 
 1. 克隆项目代码
 
@@ -52,7 +55,7 @@ PM-System-Beta/
    ```cmd
    node bin/www
    ```
-## 功能流程图：
+### 功能流程图：
 - 大文件分片上传(增量计算)：
 
 ![img_2.png](public/images/img_2.png)
@@ -60,3 +63,4 @@ PM-System-Beta/
 - 邮箱发送功能：
 
 ![img.png](public/images/img.png)
+
