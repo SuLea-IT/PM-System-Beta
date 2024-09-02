@@ -20,8 +20,8 @@ const uploadRestrictions = {
         uploadFileCount: 3
     },
     2: {
-        allowedExtensions: ['.tsv.gz', '.mtx.gz', '.txt', '.text'],
-        requiredFileNames: ['barcodes', 'features', 'matrix', '*'],
+        allowedExtensions: ['.tsv.gz', '.mtx.gz'],
+        requiredFileNames: ['barcodes', 'features', 'matrix', 'barcodes_pos'],
         uploadFileCount: 4
     },
     3: {
@@ -30,7 +30,7 @@ const uploadRestrictions = {
         uploadFileCount: 4
     },
     4: {
-        allowedExtensions: ['.tsv.gz', '.mtx.gz', '.h5'],
+        allowedExtensions: ['.csv.gz','.h5'],
         requiredFileNames: ['*', '*'],
         uploadFileCount: 2
     },
@@ -85,6 +85,7 @@ router.post('/upload', multerUpload.array('file', 10), async (req, res) => {
         for (const file of req.files) {
             req.file = file;
             const result = await handleFileUpload(req, fileExtension); // 传递fileExtension参数
+            // console.log(result)
 
             if (result.msg === "文件合并成功并且分片文件夹已删除") {
                 Fdata = "所有文件上传成功";

@@ -1,13 +1,11 @@
 import sys
 import scanpy as sc
-import os
-import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
 import gzip
 from pandas.api.types import CategoricalDtype
-mat = sys.argv[1]
-
+import os
+import matplotlib.pyplot as plt
 save_path = sys.argv[2]
 def save_figure(adata, key, save_path, filename, plot_type='umap', dpi=300):
     if not os.path.exists(save_path):
@@ -22,12 +20,21 @@ def save_figure(adata, key, save_path, filename, plot_type='umap', dpi=300):
     full_save_path = os.path.join(save_path, f'{filename}_{plot_type}.pdf')
     fig.savefig(full_save_path, format='pdf', dpi=dpi)
     plt.close()
-    # 在这里打印生成的文件路径，以便 Node.js 捕获
     print(save_path)  # 假设这是生成的文件
-# 从命令行参数获取路径
-
-# 读取数据
+#百迈克空间转录组数据
+mat = sys.argv[1]
+coord = f"{mat}/barcodes_pos.tsv.gz"
 adata = sc.read_10x_mtx(path=mat)
+pos = pd.read_csv(coord, sep="\t", names=["cellID", "row", "col"])
+pos2 = pos[pos["cellID"].isin(adata.to_df().index.to_list())]
+cat_size_order = CategoricalDtype(adata.to_df().index.to_list(), ordered=False)
+pos2['cellID'] = pos2['cellID'].astype(cat_size_order)
+pos2.set_index('cellID', inplace=True)
+cells_in_adata = set(adata.obs_names)
+cells_in_pos2 = set(pos2.index)
+missing_cells = cells_in_adata - cells_in_pos2
+adata = adata[~adata.obs_names.isin(missing_cells)]
+adata.obsm['spatial'] = np.array(pos2)
 #过滤数据
 min_genes = 100  # 每个细胞的最小基因数
 min_cells = 3 # 每个基因的最小细胞数

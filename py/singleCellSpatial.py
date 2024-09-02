@@ -1,13 +1,11 @@
 import sys
-import scanpy as sc
-import os
-import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
 import gzip
 from pandas.api.types import CategoricalDtype
-mat = sys.argv[1]
-
+import scanpy as sc
+import os
+import matplotlib.pyplot as plt
 save_path = sys.argv[2]
 def save_figure(adata, key, save_path, filename, plot_type='umap', dpi=300):
     if not os.path.exists(save_path):
@@ -22,11 +20,11 @@ def save_figure(adata, key, save_path, filename, plot_type='umap', dpi=300):
     full_save_path = os.path.join(save_path, f'{filename}_{plot_type}.pdf')
     fig.savefig(full_save_path, format='pdf', dpi=dpi)
     plt.close()
-    # 在这里打印生成的文件路径，以便 Node.js 捕获
     print(save_path)  # 假设这是生成的文件
-# 从命令行参数获取路径
 
-# 读取数据
+
+# 从命令行参数获取路径
+mat = sys.argv[1]
 adata = sc.read_10x_mtx(path=mat)
 #过滤数据
 min_genes = 100  # 每个细胞的最小基因数
