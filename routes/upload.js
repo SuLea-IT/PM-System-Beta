@@ -6,8 +6,41 @@ const {handleFileUpload} = require('../util/fileUploadHandler'); // 引入FileUp
 
 const router = express.Router();
 const multerUpload = multer({dest: 'uploads/'});
-
-const uploadRestrictions = {
+const uploadGene = {
+    /*
+    * 1.代表单细胞数据类型
+    * 2.单细胞级别空间类型
+    * 3.百迈克空间转录组数据
+    * 4.Xenium数据
+    * 5.h5ad数据类型
+    * */
+    1: {
+        allowedExtensions: ['.tsv.gz', '.mtx.gz','.txt','.text'],
+        requiredFileNames: ['barcodes', 'features', 'matrix', "*"],
+        uploadFileCount: 4
+    },
+    2: {
+        allowedExtensions: ['.tsv.gz', '.mtx.gz','.txt','.text'],
+        requiredFileNames: ['barcodes', 'features', 'matrix', 'barcodes_pos', "*"],
+        uploadFileCount: 5
+    },
+    3: {
+        allowedExtensions: ['.tsv.gz', '.mtx.gz','.txt','.text'],
+        requiredFileNames: ['barcodes', 'features', 'matrix', '*'],
+        uploadFileCount: 5
+    },
+    4: {
+        allowedExtensions: ['.csv.gz','.h5','.txt','.text'],
+        requiredFileNames: ['*', '*'],
+        uploadFileCount: 3
+    },
+    5: {
+        allowedExtensions: ['.h5ad','.txt','.text'],
+        requiredFileNames: ['*', '*'],
+        uploadFileCount: 2
+    }
+};
+const uploadCluster = {
     /*
     * 1.代表单细胞数据类型
     * 2.单细胞级别空间类型
@@ -42,8 +75,13 @@ const uploadRestrictions = {
     }
 };
 
-function validateFileTypeAndName(fileName, type) {
-    const restrictions = uploadRestrictions[type];
+function validateFileTypeAndName(fun,fileName, type) {
+    let restrictions;
+    if(fun==1){
+        restrictions = uploadCluster[type];
+    }else if(fun==2){
+        restrictions = uploadGene[type];
+    }
 
     // 获取完整的扩展名
     const fileExtension = fileName.slice(fileName.indexOf('.'));  // 获取第一个点之后的所有字符
@@ -70,15 +108,20 @@ function validateFileTypeAndName(fileName, type) {
 
 router.post('/upload', multerUpload.array('file', 10), async (req, res) => {
     try {
-        const {type, fileName} = req.body;
+        const {type, fileName,fun} = req.body;
         const uploadResults = [];
         let Fdata = "上传中";
         let FCode = 200;
+        let restrictions
+        if(fun==1){
+            restrictions = uploadCluster[type];
+        }else if(fun==2){
+            restrictions = uploadGene[type];
+        }
 
-        const restrictions = uploadRestrictions[type];
 
         // 校验传递的 fileName 字段
-        validateFileTypeAndName(fileName, type);
+        validateFileTypeAndName(fun,fileName, type);
 
         // 获取完整的文件扩展名
         const fileExtension = fileName.slice(fileName.indexOf('.'));  // 获取第一个点之后的所有字符

@@ -70,7 +70,7 @@ const calculateMD5 = (data) => {
 const checkAllFilesUploaded = (type, totalFiles, currentFileIndex) => {
     console.log("检测开始")
     // 检查所有文件是否都上传完成
-    if (currentFileIndex == uploadRestrictions[type].uploadFileCount) {
+    if (currentFileIndex == totalFiles) {
         console.log("检测通过")
 
         return true;
@@ -180,7 +180,7 @@ const handleFileUpload = async (req, fileExtension) => {
 
     const projectDir = path.join('uploads', timestamp);
     await fsExtra.ensureDir(projectDir);
-
+    await cleanupPreviousUpload(uploadId, projectDir);
     const chunkDir = path.join(projectDir, uploadId);
     await fsExtra.ensureDir(chunkDir);
 
@@ -192,10 +192,14 @@ const handleFileUpload = async (req, fileExtension) => {
             fileName,
             fileSize: 0,
             scriptExecuted: false,
+            md5Incremental: createMD5Incremental() // 在初始化时创建一个新的MD5对象
         };
-        uploadProgress[uploadId].md5Incremental = createMD5Incremental();
         fileExistFlag[uploadId] = false;
+    } else if (indexInt === 0) {
+        // 如果是新的一次上传，重新初始化md5对象
+        uploadProgress[uploadId].md5Incremental = createMD5Incremental();
     }
+
 
     if (!req.file) {
         throw new Error('文件未提供');
@@ -214,15 +218,19 @@ const handleFileUpload = async (req, fileExtension) => {
         }
 
         await fsExtra.move(req.file.path, chunkPath);
+
         updateMD5Incremental(uploadProgress[uploadId].md5Incremental, chunkData);
         uploadProgress[uploadId].chunks[indexInt] = true;
-
+        console.log("创建合并目录了")
         const allUploaded = uploadProgress[uploadId].chunks.every(status => status === true);
         if (allUploaded) {
+            console.log(chunkDir)
+            console.log(projectDir)
+            await fsExtra.ensureDir(chunkDir);
             const files = uploadProgress[uploadId].chunks.map((_, i) => path.join(chunkDir, i.toString()));
             const tempOutputPath = path.join(projectDir, `temp_${uploadId}`);
             await mergeChunks(files, tempOutputPath);
-
+            console.log("合并文件结束")
             const finalMD5 = finalizeMD5Incremental(uploadProgress[uploadId].md5Incremental);
 
             const finalFolder = path.join(projectDir, `${ip}_${fun}_${type}`);
@@ -257,20 +265,21 @@ const handleFileUpload = async (req, fileExtension) => {
                 const scriptRunId = await saveScriptRun(type,fun, finalFolder, storagePath, email);
                 console.log(`保存的脚本运行ID: ${scriptRunId}`);
 
-                // // 在尝试读取之前，等待插入完全完成
-                // await new Promise(resolve => setTimeout(resolve, 100)); // 增加一个短暂的延时，等待数据库事务完成
-                //
-                // // 从数据库读取脚本运行参数
-                // const scriptRun = await getScriptRunById(scriptRunId);
-                //
-                // // 检查并运行脚本
-                // if (scriptRun) {
-                //     runPythonScript(scriptRun.type, scriptRun.folderPath, scriptRun.storagePath, scriptRun.email, scriptRunId)
-                //         .then((result) => console.log(`Python脚本执行成功: ${result}`))
-                //         .catch((error) => console.error(`Python脚本执行失败: ${error}`));
-                // } else {
-                //     console.error('脚本运行记录未找到，可能在保存时出现问题。');
-                // }
+                // 在尝试读取之前，等待插入完全完成
+                await new Promise(resolve => setTimeout(resolve, 100)); // 增加一个短暂的延时，等待数据库事务完成
+
+                // 从数据库读取脚本运行参数
+                const scriptRun = await getScriptRunById(scriptRunId);
+
+                // 检查并运行脚本
+                if (scriptRun) {
+                    runPythonScript(scriptRun.fun,scriptRun.type, scriptRun.folderPath, scriptRun.storagePath,
+                    scriptRun.email, scriptRunId)
+                        .then((result) => console.log(`Python脚本执行成功: ${result}`))
+                        .catch((error) => console.error(`Python脚本执行失败: ${error}`));
+                } else {
+                    console.error('脚本运行记录未找到，可能在保存时出现问题。');
+                }
             }
 
             return {code: 200, msg: '文件合并成功并且分片文件夹已删除', data: {md5: finalMD5, first_chunk_md5: firstChunkMD5}};

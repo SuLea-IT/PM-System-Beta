@@ -1,5 +1,5 @@
-
-
+# 导入必要的库
+# 1/h5ad.py
 import sys
 import pandas as pd
 import numpy as np
@@ -23,11 +23,9 @@ def save_figure(adata, key, save_path, filename, plot_type='umap', dpi=300):
     fig.savefig(full_save_path, format='pdf', dpi=dpi)
     plt.close()
     print(save_path)  # 假设这是生成的文件
-
-
-# 从命令行参数获取路径
 mat = sys.argv[1]
-adata = sc.read_10x_mtx(path=mat)
+#anndata格式
+adata = sc.read_h5ad(f"{mat}/sc_all_adata.h5ad")
 #过滤数据
 min_genes = 100  # 每个细胞的最小基因数
 min_cells = 3 # 每个基因的最小细胞数
@@ -52,3 +50,4 @@ elif not has_umap and has_tsne:
     sc.tl.umap(adata)
 save_figure(adata, 'leiden', save_path, 'clustered_data', plot_type='umap')
 save_figure(adata, 'leiden', save_path, 'clustered_data', plot_type='tsne')
+

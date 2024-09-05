@@ -25,7 +25,7 @@ const sendEmail = async (to, dirPath) => {
         const output = fs.createWriteStream(zipFilePath);
 
         archive.pipe(output);
-
+        console.log(dirPath)
         // 使用完整路径压缩指定的文件夹内的所有文件和子文件夹
         archive.directory(path.resolve(dirPath), false);
 
