@@ -180,7 +180,6 @@ const handleFileUpload = async (req, fileExtension) => {
 
     const projectDir = path.join('uploads', timestamp);
     await fsExtra.ensureDir(projectDir);
-    await cleanupPreviousUpload(uploadId, projectDir);
     const chunkDir = path.join(projectDir, uploadId);
     await fsExtra.ensureDir(chunkDir);
 
@@ -221,7 +220,6 @@ const handleFileUpload = async (req, fileExtension) => {
 
         updateMD5Incremental(uploadProgress[uploadId].md5Incremental, chunkData);
         uploadProgress[uploadId].chunks[indexInt] = true;
-        console.log("创建合并目录了")
         const allUploaded = uploadProgress[uploadId].chunks.every(status => status === true);
         if (allUploaded) {
             console.log(chunkDir)

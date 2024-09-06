@@ -40,6 +40,40 @@ const uploadGene = {
         uploadFileCount: 2
     }
 };
+const uploadGenes = {
+    /*
+    * 1.代表单细胞数据类型
+    * 2.单细胞级别空间类型
+    * 3.百迈克空间转录组数据
+    * 4.Xenium数据
+    * 5.h5ad数据类型
+    * */
+    1: {
+        allowedExtensions: ['.tsv.gz', '.mtx.gz','.txt','.text'],
+        requiredFileNames: ['barcodes', 'features', 'matrix', "*"],
+        uploadFileCount: 4
+    },
+    2: {
+        allowedExtensions: ['.tsv.gz', '.mtx.gz','.txt','.text'],
+        requiredFileNames: ['barcodes', 'features', 'matrix', 'barcodes_pos', "*"],
+        uploadFileCount: 5
+    },
+    3: {
+        allowedExtensions: ['.tsv.gz', '.mtx.gz','.txt','.text'],
+        requiredFileNames: ['barcodes', 'features', 'matrix', '*'],
+        uploadFileCount: 5
+    },
+    4: {
+        allowedExtensions: ['.csv.gz','.h5','.txt','.text'],
+        requiredFileNames: ['*', '*'],
+        uploadFileCount: 3
+    },
+    5: {
+        allowedExtensions: ['.h5ad','.txt','.text'],
+        requiredFileNames: ['*', '*'],
+        uploadFileCount: 2
+    }
+};
 const uploadCluster = {
     /*
     * 1.代表单细胞数据类型
@@ -82,6 +116,9 @@ function validateFileTypeAndName(fun,fileName, type) {
     }else if(fun==2){
         restrictions = uploadGene[type];
     }
+    else if(fun==3){
+        restrictions = uploadGenes[type];
+    }
 
     // 获取完整的扩展名
     const fileExtension = fileName.slice(fileName.indexOf('.'));  // 获取第一个点之后的所有字符
@@ -117,6 +154,8 @@ router.post('/upload', multerUpload.array('file', 10), async (req, res) => {
             restrictions = uploadCluster[type];
         }else if(fun==2){
             restrictions = uploadGene[type];
+        }else if(fun==3){
+            restrictions = uploadGenes[type];
         }
 
 

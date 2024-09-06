@@ -2,7 +2,7 @@ import scanpy as sc
 import sys
 import os
 import matplotlib.pyplot as plt
-
+import squidpy as sq
 save_path = sys.argv[2]
 mat = sys.argv[1]
 
@@ -11,24 +11,37 @@ def save_figure(adata, genes, save_path, filename, plot_type, dpi=300, Finally=F
     if not os.path.exists(save_path):
         os.makedirs(save_path)
 
-    fig = None
     if plot_type == 'umap':
-        fig = sc.pl.umap(
+        fig_list = sc.pl.umap(
             adata,
-            color=[genes, "leiden"],
+            color=["my_score", "leiden"],
             frameon=False,
             ncols=3,
-            size=5, show=False, return_fig=True
+            size=5,
+            show=False,
+            return_fig=True  # Make sure it returns the figure
         )
-    elif plot_type == 'dotplot':
-        # 绘制 dotplot 图形
-        sc.pl.dotplot(adata, [genes] if isinstance(genes, str) else genes, groupby="leiden", show=False)
-        fig = plt.gcf()  # 获取当前的 Matplotlib 图像
-    else:
-        return
+        # Check if it's a list and loop through it to save each figure
+        if isinstance(fig_list, list):
+            for idx, fig in enumerate(fig_list):
+                full_save_path = os.path.join(save_path, f'{filename}_{plot_type}_{idx}.pdf')
+                fig.savefig(full_save_path, format='pdf', dpi=dpi)
+                plt.close(fig)
+        else:
+            full_save_path = os.path.join(save_path, f'{filename}_{plot_type}.pdf')
+            fig_list.savefig(full_save_path, format='pdf', dpi=dpi)
+            plt.close(fig_list)
 
-    if fig is not None:
-        # 保存图像并关闭
+    elif plot_type == 'dotplot':
+        # Dotplot only returns a single figure
+        sc.pl.dotplot(adata, "my_score", groupby="leiden", standard_scale="var", show=False)
+        fig = plt.gcf()  # Get the current figure
+        full_save_path = os.path.join(save_path, f'{filename}_{plot_type}.pdf')
+        fig.savefig(full_save_path, format='pdf', dpi=dpi)
+        plt.close(fig)
+    elif plot_type == 'spatial':
+        fig = sq.pl.spatial_scatter(adata, color=genes, size=1, shape=None, edges_color="black", show=False,
+                                    return_fig=True)
         full_save_path = os.path.join(save_path, f'{filename}_{plot_type}.pdf')
         fig.savefig(full_save_path, format='pdf', dpi=dpi)
         plt.close(fig)
@@ -38,7 +51,7 @@ def save_figure(adata, genes, save_path, filename, plot_type, dpi=300, Finally=F
 
 
 
-
+xenium_gene_ids = ["PIN2","WUS","EPFL8b"]
 # 读取数据并进行预处理
 gene_id_file_path = f'{mat}/geneid.txt'
 sc_test = sc.read_10x_mtx(path=mat)
@@ -82,9 +95,8 @@ if os.path.exists(gene_id_file_path):
         next(file)  # 跳过标题行
         for line in file:
             gene_ids.append(line.strip())
+sc.tl.score_genes(sc_test, xenium_gene_ids, ctrl_size=50, n_bins=25, score_name='my_score')
 
-    # 为空间数据生成多个基因的UMAP、dotplot和空间散点图
-    for idx, gene_id in enumerate(gene_ids):
-        is_last = idx == len(gene_ids) - 1  # 检查是否是最后一个基因ID
-        save_figure(sc_test, gene_id, save_path, f'spatial_gene_projection_{gene_id}', plot_type='umap')
-        save_figure(sc_test, gene_id, save_path, f'spatial_dotplot_gene_projection_{gene_id}', plot_type='dotplot',Finally=is_last)
+save_figure(sc_test, gene_ids, save_path, f'spatial_gene_projection', plot_type='umap')
+save_figure(sc_test, gene_ids, save_path, f'spatial_gene_projection', plot_type='dotplot')
+save_figure(sc_test, gene_ids, save_path, f'spatial_gene_projection', plot_type='spatial', Finally=True)

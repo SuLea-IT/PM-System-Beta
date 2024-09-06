@@ -2,7 +2,7 @@ import scanpy as sc
 import sys
 import os
 import matplotlib.pyplot as plt
-
+import squidpy as sq
 save_path = sys.argv[2]
 mat = sys.argv[1]
 
@@ -24,6 +24,8 @@ def save_figure(adata, genes, save_path, filename, plot_type, dpi=300, Finally=F
         # 绘制 dotplot 图形
         sc.pl.dotplot(adata, [genes] if isinstance(genes, str) else genes, groupby="leiden", show=False)
         fig = plt.gcf()  # 获取当前的 Matplotlib 图像
+    elif plot_type == 'spatial':
+        sq.pl.spatial_scatter(adata, color=genes, size=1, shape=None, edges_color="black", show=False, return_fig=True)
     else:
         return
 
